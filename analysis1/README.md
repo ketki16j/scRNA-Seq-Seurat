@@ -35,7 +35,9 @@ Step 0. Import Seurat package
 First of all, please make sure that Seurat is installed in your R.
 
 ``library(Seurat)``
+
 This imports your installed Seurat package into your current R session. No error should be seen but some verbose information is likely. If it warns you that the package is unavailable, please install Seurat first
 
 ``install.packages("Seurat")``
+
 ``library(Seurat)``
