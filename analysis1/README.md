@@ -1,7 +1,7 @@
 This directory contains the part 1 of the analysis: using Seurat package in R to do single cell RNA- Seq analysis
 
 
-Table of Content
+**`Table of Content`**
 
 Introduction
 
@@ -33,7 +33,7 @@ Step 10. Pseudotemporal cell ordering
 Step 11. Save the result
 
 
-#Introduction
+**`Introduction`**
 
 After getting the scRNA-seq data of your samples, you will want to analyze it properly.
 
