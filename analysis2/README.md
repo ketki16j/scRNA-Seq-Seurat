@@ -49,6 +49,7 @@ RSS to BrainSpan
 CSS
 
 ***`Step 2-1. Data integration using Seurat`***
+
 Seurat has its own data integration procedure implemented. In brief, it firstly applies canonical correlation analaysis (CCA) to the data sets that need to be integrated, rotating them separately so that the covariance of the two data sets is maximized. In other words, Seurat uses CCA to find the way maximizing the similarities between data sets. Next, Seurat introduces an anchoring mechanism, looking for cell anchors in the two data sets. Cell anchors are cell pairs with each cell in a different data set. The two cells are one of the nearest neighbors of each other in the CCA space, while the nearest neighbors of one cell in its own data set also tend to be neighbors of the nearest neighbors of the other cell of the cell pair. The two anchored cells are seen as corresponding cells from one data set to the other, and an integration procedure is then applied by subtracting expression of one data set by the transformation matrix calculated by comparing the anchoring cell pairs in the two data sets. People interested in its detailed methodology can read its paper.
 
 To do integration using Seurat, one needs to firstly normalize and identify highly variable genes for each of data set to be integrated (which should have been done). If it hasn't been done, do it first:
@@ -73,7 +74,7 @@ seurat <- IntegrateData(anchors, dims = 1:30)
 ```
 
 
-Running the IntegrateData function creates a new Assay object (by default it is called integrated), where the batch-corrected expression matrix is stored. The uncorrected values are not lost, but store in the original Assay object (called RNA by default). The default assay of the resulted Seurat object is automatically set to integrated, but one can switch to the other one by using e.g. DefaultAssay(seurat) <- "RNA".
+Running the ```IntegrateData``` function creates a new ```Assay``` object (by default it is called integrated), where the batch-corrected expression matrix is stored. The uncorrected values are not lost, but store in the original Assay object (called RNA by default). The default assay of the resulted Seurat object is automatically set to integrated, but one can switch to the other one by using ```e.g. DefaultAssay(seurat) <- "RNA".```
 
 Next, we just take the corrected Seurat object and re-run the procedure in Part 1, except for the first two steps (normalization and highly variable gene identification) which should be skipped here.
 ```r
@@ -97,6 +98,8 @@ plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
 ((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
 ```
+
+![image](https://github.com/user-attachments/assets/af0e4f93-910f-40dd-b6f8-517e5a3e1c68)
 
 
 
