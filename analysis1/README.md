@@ -33,7 +33,8 @@ Step 10. Pseudotemporal cell ordering
 Step 11. Save the result
 
 
-Introduction
+#Introduction
+
 After getting the scRNA-seq data of your samples, you will want to analyze it properly.
 
 Multiple toolkits and analytic frameworks have been developed to facilitate scRNA-seq data analysis. These options include but are not limit to Seurat, developed by Rahul Satija's Lab in R, and scanpy, developed by Fabian Theis's Lab in Python. Both toolkits provide functions and rich parameter sets that serve most of the routine analysis that one usually does on scRNA-seq data. H
