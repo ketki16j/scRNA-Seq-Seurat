@@ -241,7 +241,7 @@ plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 
 ```
 ![image](https://github.com/user-attachments/assets/ef2501bc-2312-40c4-944f-6d8aa37ee06c)
 
-P.S. If you don't have simspec package, install it via devtools::install_github("quadbiolab/simspec")
+P.S. If you don't have simspec package, install it via ```devtools::install_github("quadbiolab/simspec")```
 
 
 
