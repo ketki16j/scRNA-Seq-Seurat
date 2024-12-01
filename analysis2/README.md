@@ -46,18 +46,24 @@ Seurat has its own data integration procedure implemented. In brief, it firstly 
 To do integration using Seurat, one needs to firstly normalize and identify highly variable genes for each of data set to be integrated (which should have been done). If it hasn't been done, do it first:
 ```r
 seurat_DS1 <- NormalizeData(seurat_DS1) %>% FindVariableFeatures(nfeatures = 3000)
-seurat_DS2 <- NormalizeData(seurat_DS2) %>% FindVariableFeatures(nfeatures = 3000) ```
+seurat_DS2 <- NormalizeData(seurat_DS2) %>% FindVariableFeatures(nfeatures = 3000)
+```
+
 
 Next, we identify anchors of data sets. At this step, Seurat takes a list of Seurat objects as the input. Please note that Seurat allows integration of more than two samples. One just needs to put them into a list.
 ```r
 seurat_objs <- list(DS1 = seurat_DS1, DS2 = seurat_DS2)
-anchors <- FindIntegrationAnchors(object.list = seurat_objs, dims = 1:30)```
+anchors <- FindIntegrationAnchors(object.list = seurat_objs, dims = 1:30)
+```
+
 P.S. The dims parameter determines the number of CC components to take into account, and one should try different values to fine-tune the results.
 
 Next, the identified anchor set is passed to the the IntegrateData function to do the expression level correction.
 
 ```r
-seurat <- IntegrateData(anchors, dims = 1:30)```
+seurat <- IntegrateData(anchors, dims = 1:30)
+```
+
 
 Running the IntegrateData function creates a new Assay object (by default it is called integrated), where the batch-corrected expression matrix is stored. The uncorrected values are not lost, but store in the original Assay object (called RNA by default). The default assay of the resulted Seurat object is automatically set to integrated, but one can switch to the other one by using e.g. DefaultAssay(seurat) <- "RNA".
 
@@ -66,18 +72,24 @@ Next, we just take the corrected Seurat object and re-run the procedure in Part 
 seurat <- ScaleData(seurat)
 seurat <- RunPCA(seurat, npcs = 50)
 seurat <- RunUMAP(seurat, dims = 1:20)
-seurat <- FindNeighbors(seurat, dims = 1:20) %>% FindClusters(resolution = 0.6) ```
+seurat <- FindNeighbors(seurat, dims = 1:20) %>% FindClusters(resolution = 0.6)
+```
+
 
 # You may also want to save the object
 ```r
-saveRDS(seurat, file="integrated_seurat.rds") ```
+saveRDS(seurat, file="integrated_seurat.rds")
+```
+
 Please be aware, that while the tSNE/UMAP embedding and clustering should be done with the integrated assay, the corrected values are no longer very reliable as the quantitative measure of gene expression. It is recommended that for the other analysis such as cluster marker identification and visualization, to use the uncorrected expression values instead, by setting the DefaultAssay back to RNA
 ```r
 DefaultAssay(seurat) <- "RNA"
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))```
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+```
+
 
 
 It is not perfect but it does help to make the two data sets more comparable.
@@ -105,7 +117,9 @@ seurat <- RunUMAP(seurat, reduction = "harmony", dims = 1:20)
 seurat <- FindNeighbors(seurat, reduction = "harmony", dims = 1:20) %>% FindClusters(resolution = 0.6) 
 
 # You may also want to save the object
-saveRDS(seurat, file="integrated_harmony.rds") ```
+saveRDS(seurat, file="integrated_harmony.rds")
+```
+
 
 P.S. The dims.use parameter determines which dimensions (by default, of PCA) to be used for the fuzzy clustering and to be corrected. By default it uses all the calculated dimensions. The max.iter.harmony controls the maximum number of iterations to be done. By default it is 10 but since Harmony is pretty fast, it is completely fine to increase the limit so that convergence can be ensured.
 
@@ -114,7 +128,9 @@ We can then visualize the integration results similar to before
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+```
+
 
 
 Not bad. Cells of the two samples are quite nicely mixed, and we can see some nice trajectories. Question marks may need to put at some of the mixed groups, particularly those of non-dorsal-telencephalic cells, whether or not they are indeed cells of the same cell type that should be mixed.
@@ -137,7 +153,9 @@ seurat <- FindNeighbors(seurat, reduction = "iNMF", dims = 1:ncol(Embeddings(seu
     FindClusters(resolution = 0.6)
 
 # You may also want to save the object
-saveRDS(seurat, file="integrated_liger.rds") ```
+saveRDS(seurat, file="integrated_liger.rds")
+```
+
 
 P.S. To install LIGER, do devtools::install_github('MacoskoLab/liger'). If you have a Mac machine and there is any error happened, there are some suggestions on its page. To install SeuratWrappers, do devtools::install_github('satijalab/seurat-wrappers')
 
@@ -146,7 +164,9 @@ Similar to above, we next visualize the integration results with the UMAP showin
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+```
+
 
 
 The result doesn't seem to be very easy to understand.
@@ -168,7 +188,9 @@ seurat <- FindNeighbors(seurat, reduction = "mnn", dims = 1:20) %>%
     FindClusters(resolution = 0.6)
 
 # You may also want to save the object
-saveRDS(seurat, file="integrated_mnn.rds") ```
+saveRDS(seurat, file="integrated_mnn.rds")
+```
+
 P.S. To install batchelor, do BiocManager::install("batchelor"). The batchelor package is required for the RunFastMNN function to work.
 
 We can next check the the integration method via its UMAP embedding.
@@ -176,7 +198,8 @@ We can next check the the integration method via its UMAP embedding.
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+```
 
 
 
@@ -200,8 +223,11 @@ seurat <- FindNeighbors(seurat, reduction = "rss", dims = 1:ncol(Embeddings(seur
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
-P.S. If you don't have simspec package, install it via devtools::install_github("quadbiolab/simspec") 
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+```
+
+P.S. If you don't have simspec package, install it via devtools::install_github("quadbiolab/simspec")
+
 
 
 We got nice trajectories and cells from the two samples seem to mix in a reasonable way. Still, you may have realized problems when comparing the clustering results and for instance LHX9 expression.
@@ -224,7 +250,9 @@ seurat <- FindNeighbors(seurat, reduction = "css", dims = 1:ncol(Embeddings(seur
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+```
+
 
 
 The result doesn't seem to be worse than the others, but the trajectories look a bit odds.
