@@ -67,7 +67,7 @@ anchors <- FindIntegrationAnchors(object.list = seurat_objs, dims = 1:30)
 
 P.S. The dims parameter determines the number of CC components to take into account, and one should try different values to fine-tune the results.
 
-Next, the identified anchor set is passed to the the IntegrateData function to do the expression level correction.
+Next, the identified anchor set is passed to the the ``IntegrateData``` function to do the expression level correction.
 
 ```r
 seurat <- IntegrateData(anchors, dims = 1:30)
@@ -90,7 +90,7 @@ seurat <- FindNeighbors(seurat, dims = 1:20) %>% FindClusters(resolution = 0.6)
 saveRDS(seurat, file="integrated_seurat.rds")
 ```
 
-Please be aware, that while the tSNE/UMAP embedding and clustering should be done with the integrated assay, the corrected values are no longer very reliable as the quantitative measure of gene expression. It is recommended that for the other analysis such as cluster marker identification and visualization, to use the uncorrected expression values instead, by setting the DefaultAssay back to RNA
+Please be aware, that while the tSNE/UMAP embedding and clustering should be done with the integrated assay, the corrected values are no longer very reliable as the quantitative measure of gene expression. It is recommended that for the other analysis such as cluster marker identification and visualization, to use the uncorrected expression values instead, by setting the ```DefaultAssay``` back to ```RNA```
 ```r
 DefaultAssay(seurat) <- "RNA"
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
@@ -105,7 +105,7 @@ plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 
 
 It is not perfect but it does help to make the two data sets more comparable.
 
-If you want to further improve the result, there are several parameters that one may consider to tune (all parameters above are either default or by gut feeling so there should be space for improvement). First of all, the FindIntegrationAnchors function chooses genes for integration based on their frequencies being identified as highly variable genes in individual data sets. Therefore, the nfeatures parameter when doing FindVariableFeatures on the two data sets definitely influence the gene set for integration. Next, since the anchoring step is the crucial step in Seurat integration, any parameter substantially affect the anchoring procedure can change the final integration. For instance, the FindIntegrationAnchors function chooses 2000 genes with the highest frequencies of being highly variable genes in individual data sets for integration by default, and this number of genes for integration can be changed by setting the anchor.features parameter in the FindIntegrationAnchors function. Similar to the issue of how many PCs to use for making tSNE/UMAP and clustering, one needs to decide which CCs to use to define cross-data-set neighbors, as set in the dims parameter. This is another parameter which can influence the result. There are more parameters which can affect in the same function, including k.anchor, k.filter and k.score, although they may not be the first parameters that you want to start with. Similarly, in thefunction IntegrateData used at the next step there is also the dims parameter, that you may want to change as well.
+If you want to further improve the result, there are several parameters that one may consider to tune (all parameters above are either default or by gut feeling so there should be space for improvement). First of all, the ```FindIntegrationAnchors``` function chooses genes for integration based on their frequencies being identified as highly variable genes in individual data sets. Therefore, the ```nfeatures``` parameter when doing ```FindVariableFeatures``` on the two data sets definitely influence the gene set for integration. Next, since the anchoring step is the crucial step in Seurat integration, any parameter substantially affect the anchoring procedure can change the final integration. For instance, the ```FindIntegrationAnchors``` function chooses 2000 genes with the highest frequencies of being highly variable genes in individual data sets for integration by default, and this number of genes for integration can be changed by setting the anchor.features parameter in the ```FindIntegrationAnchors``` function. Similar to the issue of how many PCs to use for making tSNE/UMAP and clustering, one needs to decide which CCs to use to define cross-data-set neighbors, as set in the ```dims``` parameter. This is another parameter which can influence the result. There are more parameters which can affect in the same function, including ```k.anchor```, ```k.filter``` and ```k.score```, although they may not be the first parameters that you want to start with. Similarly, in thefunction IntegrateData used at the next step there is also the dims parameter, that you may want to change as well.
 
 It is worth to mention that Seurat also provides another strategy for integrative analysis, which is data transfer. It is used when there is an existed annotated reference data, and one wants to use the reference data to assist cell type/state annotation of a new query data. The major differences between data integration and data transfer include:
 
@@ -116,7 +116,7 @@ This tutorial won't cover this part as it doesn't match with the data set we hav
 ***`Step 2-2. Data integration using Harmony`***
 Besides Seurat, there are more data integration methods available now. Harmony, developed by Soumya Raychaudhurils lab, is one of them. It is also the most highlighted integration method in the first benchmark on scRNA-seq batch effect correction tools. In brief, Harmony uses fuzzy clustering to assign every cell to multiple clusters. For each cluster, it then calculates a correction factor for each data set to move the centroid of the cluster of this data set towards the global centroid of the cluster. Since every cell is represented as a combination of multiple clusters, a cell-specific correction factor is calculated by averaging the correction factors of clusters that the cell belongs to while weighting by the cluster assignment ratio. This process will be iterated until convergence happens or reaching the iteration limits. To get more details of the method, please refer to the paper.
 
-Harmony provides a simple API for Seurat object, which is a function called RunHarmony, so it is very easy to use. It takes the merged Seurat object (the one generated at Step 1) as the input and one needs to tell the function which metadata feature to use as the batch identity. It returns a Seurat object, with a more reduction called harmony added. It is like the corrected PCA so one should then explicitly tell Seurat to use the harmony reduction for following analysis including making UMAP embedding and identifying cell clusters.
+Harmony provides a simple API for Seurat object, which is a function called ```RunHarmony```, so it is very easy to use. It takes the merged Seurat object (the one generated at Step 1) as the input and one needs to tell the function which metadata feature to use as the batch identity. It returns a Seurat object, with a more reduction called ```harmony``` added. It is like the corrected PCA so one should then explicitly tell Seurat to use the ```harmony``` reduction for following analysis including making UMAP embedding and identifying cell clusters.
 ```r
 seurat <- merge(seurat_DS1, seurat_DS2) %>%
     FindVariableFeatures(nfeatures = 3000) %>%
@@ -132,7 +132,7 @@ saveRDS(seurat, file="integrated_harmony.rds")
 ```
 
 
-P.S. The dims.use parameter determines which dimensions (by default, of PCA) to be used for the fuzzy clustering and to be corrected. By default it uses all the calculated dimensions. The max.iter.harmony controls the maximum number of iterations to be done. By default it is 10 but since Harmony is pretty fast, it is completely fine to increase the limit so that convergence can be ensured.
+P.S. The ```dims.use``` parameter determines which dimensions (by default, of PCA) to be used for the fuzzy clustering and to be corrected. By default it uses all the calculated dimensions. The ```max.iter.harmony``` controls the maximum number of iterations to be done. By default it is 10 but since ```Harmony``` is pretty fast, it is completely fine to increase the limit so that convergence can be ensured.
 
 We can then visualize the integration results similar to before
 ```r
@@ -150,7 +150,7 @@ Not bad. Cells of the two samples are quite nicely mixed, and we can see some ni
 As you may have noticed, Harmony by default takes the PCA result as the input and iterations of correction are done to the PCs of each cell. Therefore, parameters affecting original PCA, including nfeatures in FindVariableFeatures to identify highly variable genes, should have effect on the integration. Next, when there is not specified parameter provided, the RunHarmony function takes all the available dimensions in the provided input (PCA by default). One can specify which dimensions to use by setting the dims.use parameter (this parameter is similar to the dims parameters in many Seurat functions).
 
 ***`Step 2-3. Data integration using LIGER`***
-Together with Harmony and Seurat, LIGAR, developed by Evan Macosko's lab, is another data integration tool that was highlighted by the benchmark paper. It adapts integrative non-negative matrix factorization to identifying shared and dataset-specific factors for joint analysis. The detailed mathematics of the method can be found in the paper. It is implemented as the liger package in R, and it provides a wrapper for Seurat object, which relies also on the additional package SeuratWrappers in R.
+Together with Harmony and Seurat, ```LIGAR```, developed by Evan Macosko's lab, is another data integration tool that was highlighted by the benchmark paper. It adapts integrative non-negative matrix factorization to identifying shared and dataset-specific factors for joint analysis. The detailed mathematics of the method can be found in the paper. It is implemented as the liger package in R, and it provides a wrapper for Seurat object, which relies also on the additional package ```SeuratWrappers``` in R.
 ```r
 library(liger)
 library(SeuratWrappers)
@@ -169,7 +169,7 @@ saveRDS(seurat, file="integrated_liger.rds")
 ```
 
 
-P.S. To install LIGER, do devtools::install_github('MacoskoLab/liger'). If you have a Mac machine and there is any error happened, there are some suggestions on its page. To install SeuratWrappers, do devtools::install_github('satijalab/seurat-wrappers')
+P.S. To install LIGER, do ```devtools::install_github('MacoskoLab/liger')```. If you have a Mac machine and there is any error happened, there are some suggestions on its page. To install ```SeuratWrappers```, do ```devtools::install_github('satijalab/seurat-wrappers')```
 
 Similar to above, we next visualize the integration results with the UMAP showing data sets, clusters and also some feature plots.
 ```r
@@ -189,7 +189,7 @@ In case you want to improve the LIGER integration, besides the nfeatures paramet
 ***`Step 2-4. Data integration using MNN`***
 MNN, developed by John Marioni's lab in EMBL-EBI, is one of the first algorithms developed for scRNA-seq data integration or batch correction. It estimates a cell-specific correction vector based on the mutual nearest neighbors between cells from two different samples/batches to introduce correction to the dimension reduction (e.g. PCA) of the query cells. It also introduces an ordering mechanism so that it also supports integration of more than two samples/batches. Although not being the most highlighted methods in the benchmarking paper mentioned above, it is one of the best methods according to other benchmark effort (e.g. Luecken et al.). To get more details of the method, please refer to the paper. In R, the MNN algorithm is implemented in the batchelor package, and the wrapper function for a Seurat object is included in the SeuratWrappers package (RunFastMNN function).
 
-The RunFastMNN function uses a list of Seurat objects, each of which is for one sample/batch, as the input. One can use the SplitObject function in the Seurat package to split a Seurat object given a metadata column.
+The ```RunFastMNN``` function uses a list of Seurat objects, each of which is for one sample/batch, as the input. One can use the ```SplitObject``` function in the ```Seurat``` package to split a Seurat object given a metadata column.
 ```r
 library(SeuratWrappers)
 
@@ -204,7 +204,7 @@ seurat <- FindNeighbors(seurat, reduction = "mnn", dims = 1:20) %>%
 saveRDS(seurat, file="integrated_mnn.rds")
 ```
 
-P.S. To install batchelor, do BiocManager::install("batchelor"). The batchelor package is required for the RunFastMNN function to work.
+P.S. To install batchelor, do ```BiocManager::install("batchelor")```. The ```batchelor``` package is required for the ```RunFastMNN``` function to work.
 
 We can next check the the integration method via its UMAP embedding.
 ```r
