@@ -5,7 +5,7 @@ Although some experimental strategy, e.g. cell hashing, as well as computational
 In this part of the tutorial, several scRNA-seq integration methods would be introduced. We will use DS1 which has been described in the first part of the tutorial, together with DS2 which you should have analyzed following this vignette. 
 ``The datasets are available in scRNA-Seq-Seurat-/datasets/``
 
-Step 0. Load data
+***`Step 0. Load data`***
 Let's start with importing Seurat and load the saved Seurat object.
 
 ```r
@@ -16,7 +16,7 @@ seurat_DS1 <- readRDS("DS1/seurat_obj_all.rds")
 seurat_DS2 <- readRDS("DS2/seurat_obj_all.rds")
 ```
 
-Step 1. Merge the two data sets
+***`Step 1. Merge the two data sets`***
 First of all, there is some chances that batch effect is small so that no integration is necessary. Therefore, we should firstly take a look at the two data sets by simply merging them together.
 ```r
 seurat <- merge(seurat_DS1, seurat_DS2) %>%
@@ -35,12 +35,18 @@ Obviously, the two data sets separate from each other on the embedding. However,
 Here we will try different methods, including
 
 Seurat
+
 Harmony
+
 LIGER
+
 MNN
+
 RSS to BrainSpan
+
 CSS
-Step 2-1. Data integration using Seurat
+
+***`Step 2-1. Data integration using Seurat`***
 Seurat has its own data integration procedure implemented. In brief, it firstly applies canonical correlation analaysis (CCA) to the data sets that need to be integrated, rotating them separately so that the covariance of the two data sets is maximized. In other words, Seurat uses CCA to find the way maximizing the similarities between data sets. Next, Seurat introduces an anchoring mechanism, looking for cell anchors in the two data sets. Cell anchors are cell pairs with each cell in a different data set. The two cells are one of the nearest neighbors of each other in the CCA space, while the nearest neighbors of one cell in its own data set also tend to be neighbors of the nearest neighbors of the other cell of the cell pair. The two anchored cells are seen as corresponding cells from one data set to the other, and an integration procedure is then applied by subtracting expression of one data set by the transformation matrix calculated by comparing the anchoring cell pairs in the two data sets. People interested in its detailed methodology can read its paper.
 
 To do integration using Seurat, one needs to firstly normalize and identify highly variable genes for each of data set to be integrated (which should have been done). If it hasn't been done, do it first:
@@ -102,7 +108,7 @@ Instead of generating a joint space using CCA when doing data integration, data 
 No expression value is corrected, and therefore no joint embedding of the two data sets is created; instead, one can project cells in the query data to the reference embedding. Besides the embedding, cell labels can also be projected so that one can 'transfer' labels in the reference atlas to the query data set for annotation.
 This tutorial won't cover this part as it doesn't match with the data set we have in hand. For people would like to try, it won't be difficult to follow the respective Seurat tutorial.
 
-Step 2-2. Data integration using Harmony
+***`Step 2-2. Data integration using Harmony`***
 Besides Seurat, there are more data integration methods available now. Harmony, developed by Soumya Raychaudhurils lab, is one of them. It is also the most highlighted integration method in the first benchmark on scRNA-seq batch effect correction tools. In brief, Harmony uses fuzzy clustering to assign every cell to multiple clusters. For each cluster, it then calculates a correction factor for each data set to move the centroid of the cluster of this data set towards the global centroid of the cluster. Since every cell is represented as a combination of multiple clusters, a cell-specific correction factor is calculated by averaging the correction factors of clusters that the cell belongs to while weighting by the cluster assignment ratio. This process will be iterated until convergence happens or reaching the iteration limits. To get more details of the method, please refer to the paper.
 
 Harmony provides a simple API for Seurat object, which is a function called RunHarmony, so it is very easy to use. It takes the merged Seurat object (the one generated at Step 1) as the input and one needs to tell the function which metadata feature to use as the batch identity. It returns a Seurat object, with a more reduction called harmony added. It is like the corrected PCA so one should then explicitly tell Seurat to use the harmony reduction for following analysis including making UMAP embedding and identifying cell clusters.
@@ -137,7 +143,7 @@ Not bad. Cells of the two samples are quite nicely mixed, and we can see some ni
 
 As you may have noticed, Harmony by default takes the PCA result as the input and iterations of correction are done to the PCs of each cell. Therefore, parameters affecting original PCA, including nfeatures in FindVariableFeatures to identify highly variable genes, should have effect on the integration. Next, when there is not specified parameter provided, the RunHarmony function takes all the available dimensions in the provided input (PCA by default). One can specify which dimensions to use by setting the dims.use parameter (this parameter is similar to the dims parameters in many Seurat functions).
 
-Step 2-3. Data integration using LIGER
+***`Step 2-3. Data integration using LIGER`***
 Together with Harmony and Seurat, LIGAR, developed by Evan Macosko's lab, is another data integration tool that was highlighted by the benchmark paper. It adapts integrative non-negative matrix factorization to identifying shared and dataset-specific factors for joint analysis. The detailed mathematics of the method can be found in the paper. It is implemented as the liger package in R, and it provides a wrapper for Seurat object, which relies also on the additional package SeuratWrappers in R.
 ```r
 library(liger)
@@ -173,7 +179,7 @@ The result doesn't seem to be very easy to understand.
 
 In case you want to improve the LIGER integration, besides the nfeatures parameter in the FindVariableFeatures function just like all the other methods, parameters in the RunOptimizeALS function also matters, such as k and lambda. LIGER has two functions called suggestK and suggestLambda to help to set these two parameters. Unfortunately these two parameters don't have their corresponding Seurat wrapper functions, or one would have to use the standalone liger package with its LIGER data type in order to use these two functions, and they are actually pretty slow. One can also change by guess with some principles, such as a larger kwould be needed when there are more sub-structure of the data; a larger lambda penalizes dataset-specific effects more strongly, so should better mixing cells from different data sets but potentially at the cost of over-integration (e.g. mixing cells with different expression signatures).
 
-Step 2-4. Data integration using MNN
+***`Step 2-4. Data integration using MNN`***
 MNN, developed by John Marioni's lab in EMBL-EBI, is one of the first algorithms developed for scRNA-seq data integration or batch correction. It estimates a cell-specific correction vector based on the mutual nearest neighbors between cells from two different samples/batches to introduce correction to the dimension reduction (e.g. PCA) of the query cells. It also introduces an ordering mechanism so that it also supports integration of more than two samples/batches. Although not being the most highlighted methods in the benchmarking paper mentioned above, it is one of the best methods according to other benchmark effort (e.g. Luecken et al.). To get more details of the method, please refer to the paper. In R, the MNN algorithm is implemented in the batchelor package, and the wrapper function for a Seurat object is included in the SeuratWrappers package (RunFastMNN function).
 
 The RunFastMNN function uses a list of Seurat objects, each of which is for one sample/batch, as the input. One can use the SplitObject function in the Seurat package to split a Seurat object given a metadata column.
@@ -205,7 +211,7 @@ plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 
 
 The integration looks pretty promising. In most of the time MNN performs pretty well with default parameters. Still, one can easily introduce some tuning by e.g. changing the number of features or providing a fully customized feature set for the integration. This can be done by setting up the features parameter in the RunFastMNN wrapper function. There are also more parameters that one can pass to the original function (fastMNN in the batchelor package, e.g. number of PCs to calculate).
 
-Step 2-5. Data integration using RSS to BrainSpan
+***`Step 2-5. Data integration using RSS to BrainSpan`***
 Seurat, Harmony, LIGER and MNN are probably the most commonly used methods designed for generic scRNA-seq data integration, but there are also more methods and concepts available which can be applied to data integration. One of the concept is, if there is a reference data set with multiple sample, where differences among those samples contain information of the cell type heterogeneity in the samples, representing each cell by its transcriptome similarities to those reference samples rather than its transcriptome profile itself may efficiently clean up technical noise while preserving the essential information. The method derived from this concept is called reference component analysis (RCA) or reference similarity spectrum.
 
 To do this analysis, one firstly needs a good reference. For cerebral organoid samples, the BrainSpan bulk RNA-seq data set of human brains from early fetal development to adult by Allen Brain Atlas is a very good one.
@@ -234,7 +240,7 @@ We got nice trajectories and cells from the two samples seem to mix in a reasona
 
 Even if you like this result very much, there is a very obvious limitation of RCA/RSS, that there has to be a nice reference data set available so that one can calculate the similarities without lossing too much information. If your data set happened to have some interesting signals which are unavailable at all in the reference data, you would very likely miss it. As RSS represents the data purely by similarities to the reference data, if there is no change applied to the reference data, there is no much space for improving its result. The only effective parameter in the function which could be beneficial to change is the method parameter in the ref_sim_spectrum which defines the type of correlation to calculate. By default it is Pearson correlation (method = "pearson") but using Spearman correlation is also possible (method = "spearman").
 
-Step 2-6. Data integration using CSS
+***`Step 2-6. Data integration using CSS`***
 At the end we would try the last data integration method in this tutorial, which is the extended version of RCA/RSS, which is cluster similarity spectrum (CSS) developed by our group. Instead of using external reference data set to represent cells in the data by similarities, it firstly does cell clustering to scRNA-seq data of each sample to be integrated, and uses the average expression profiles of the resulted clusters as the reference to calculate these similarities. More detailed description of the method can be seen in this paper.
 ```r
 library(simspec)
