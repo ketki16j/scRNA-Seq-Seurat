@@ -12,10 +12,9 @@ Let's start with importing Seurat and load the saved Seurat object.
 library(Seurat)
 library(dplyr)
 library(patchwork)
-
 seurat_DS1 <- readRDS("DS1/seurat_obj_all.rds")
-
 seurat_DS2 <- readRDS("DS2/seurat_obj_all.rds")``
+```r
 
 Step 1. Merge the two data sets
 First of all, there is some chances that batch effect is small so that no integration is necessary. Therefore, we should firstly take a look at the two data sets by simply merging them together.
