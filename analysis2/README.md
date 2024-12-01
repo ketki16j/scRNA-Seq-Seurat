@@ -3,7 +3,7 @@
 Although some experimental strategy, e.g. cell hashing, as well as computational demultiplexing methods such as demuxlet and scSplit to some extend allow pooling multiple samples together for the scRNA-seq library preparation and sequencing, it is unavoidable that certain steps, e.g. tissue dissociation, would have to be done separately for diffent samples. Therefore, just like when dealing with bulk RNA-seq data, batch effect is usually a critical confounder of the result that one has to resolve.
 
 In this part of the tutorial, several scRNA-seq integration methods would be introduced. We will use DS1 which has been described in the first part of the tutorial, together with DS2 which you should have analyzed following this vignette. 
-``The datasets are available in scRNA-Seq-Seurat-/datasets/``
+``The datasets are available in scRNA-Seq-Seurat/datasets/``
 
 ***`Step 0. Load data`***
 Let's start with importing Seurat and load the saved Seurat object.
