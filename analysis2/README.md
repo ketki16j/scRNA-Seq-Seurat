@@ -18,16 +18,15 @@ seurat_DS2 <- readRDS("DS2/seurat_obj_all.rds")
 
 Step 1. Merge the two data sets
 First of all, there is some chances that batch effect is small so that no integration is necessary. Therefore, we should firstly take a look at the two data sets by simply merging them together.
-
-``seurat <- merge(seurat_DS1, seurat_DS2) %>%
-    FindVariableFeatures(nfeatures = 3000) %>%
-    ScaleData() %>%
-    RunPCA(npcs = 50) %>%
-    RunUMAP(dims = 1:20)
+```r
+seurat <- merge(seurat_DS1, seurat_DS2) %>%
+FindVariableFeatures(nfeatures = 3000) %>%
+ScaleData() %>%
+RunPCA(npcs = 50) %>%
+RunUMAP(dims = 1:20)
 plot1 <- DimPlot(seurat, group.by="orig.ident")
 plot2 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-plot1 + plot2 + plot_layout(widths = c(1.5, 2))
-``
+plot1 + plot2 + plot_layout(widths = c(1.5, 2)) ```
 
 Obviously, the two data sets separate from each other on the embedding. However, the marker expression patterns suggest that the two data sets indeed share quite many cell types. Ideally, cells of the same cell type in the two data sets should be mixed with each other. However, because of the batch effect, this is not happening. So we need to do data integration. What we hope is that after the integration, cells of the same cell type in the two data sets intermix, while cells of different cell types/states still separate.
 
@@ -43,36 +42,40 @@ Step 2-1. Data integration using Seurat
 Seurat has its own data integration procedure implemented. In brief, it firstly applies canonical correlation analaysis (CCA) to the data sets that need to be integrated, rotating them separately so that the covariance of the two data sets is maximized. In other words, Seurat uses CCA to find the way maximizing the similarities between data sets. Next, Seurat introduces an anchoring mechanism, looking for cell anchors in the two data sets. Cell anchors are cell pairs with each cell in a different data set. The two cells are one of the nearest neighbors of each other in the CCA space, while the nearest neighbors of one cell in its own data set also tend to be neighbors of the nearest neighbors of the other cell of the cell pair. The two anchored cells are seen as corresponding cells from one data set to the other, and an integration procedure is then applied by subtracting expression of one data set by the transformation matrix calculated by comparing the anchoring cell pairs in the two data sets. People interested in its detailed methodology can read its paper.
 
 To do integration using Seurat, one needs to firstly normalize and identify highly variable genes for each of data set to be integrated (which should have been done). If it hasn't been done, do it first:
-
+```r
 seurat_DS1 <- NormalizeData(seurat_DS1) %>% FindVariableFeatures(nfeatures = 3000)
-seurat_DS2 <- NormalizeData(seurat_DS2) %>% FindVariableFeatures(nfeatures = 3000)
-Next, we identify anchors of data sets. At this step, Seurat takes a list of Seurat objects as the input. Please note that Seurat allows integration of more than two samples. One just needs to put them into a list.
+seurat_DS2 <- NormalizeData(seurat_DS2) %>% FindVariableFeatures(nfeatures = 3000) ```
 
+Next, we identify anchors of data sets. At this step, Seurat takes a list of Seurat objects as the input. Please note that Seurat allows integration of more than two samples. One just needs to put them into a list.
+```r
 seurat_objs <- list(DS1 = seurat_DS1, DS2 = seurat_DS2)
-anchors <- FindIntegrationAnchors(object.list = seurat_objs, dims = 1:30)
+anchors <- FindIntegrationAnchors(object.list = seurat_objs, dims = 1:30)```
 P.S. The dims parameter determines the number of CC components to take into account, and one should try different values to fine-tune the results.
 
 Next, the identified anchor set is passed to the the IntegrateData function to do the expression level correction.
 
-seurat <- IntegrateData(anchors, dims = 1:30)
+```r
+seurat <- IntegrateData(anchors, dims = 1:30)```
+
 Running the IntegrateData function creates a new Assay object (by default it is called integrated), where the batch-corrected expression matrix is stored. The uncorrected values are not lost, but store in the original Assay object (called RNA by default). The default assay of the resulted Seurat object is automatically set to integrated, but one can switch to the other one by using e.g. DefaultAssay(seurat) <- "RNA".
 
 Next, we just take the corrected Seurat object and re-run the procedure in Part 1, except for the first two steps (normalization and highly variable gene identification) which should be skipped here.
-
+```r
 seurat <- ScaleData(seurat)
 seurat <- RunPCA(seurat, npcs = 50)
 seurat <- RunUMAP(seurat, dims = 1:20)
-seurat <- FindNeighbors(seurat, dims = 1:20) %>% FindClusters(resolution = 0.6)
+seurat <- FindNeighbors(seurat, dims = 1:20) %>% FindClusters(resolution = 0.6) ```
 
 # You may also want to save the object
-saveRDS(seurat, file="integrated_seurat.rds")
+```r
+saveRDS(seurat, file="integrated_seurat.rds") ```
 Please be aware, that while the tSNE/UMAP embedding and clustering should be done with the integrated assay, the corrected values are no longer very reliable as the quantitative measure of gene expression. It is recommended that for the other analysis such as cluster marker identification and visualization, to use the uncorrected expression values instead, by setting the DefaultAssay back to RNA
-
+```r
 DefaultAssay(seurat) <- "RNA"
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))```
 
 
 It is not perfect but it does help to make the two data sets more comparable.
@@ -89,7 +92,7 @@ Step 2-2. Data integration using Harmony
 Besides Seurat, there are more data integration methods available now. Harmony, developed by Soumya Raychaudhurils lab, is one of them. It is also the most highlighted integration method in the first benchmark on scRNA-seq batch effect correction tools. In brief, Harmony uses fuzzy clustering to assign every cell to multiple clusters. For each cluster, it then calculates a correction factor for each data set to move the centroid of the cluster of this data set towards the global centroid of the cluster. Since every cell is represented as a combination of multiple clusters, a cell-specific correction factor is calculated by averaging the correction factors of clusters that the cell belongs to while weighting by the cluster assignment ratio. This process will be iterated until convergence happens or reaching the iteration limits. To get more details of the method, please refer to the paper.
 
 Harmony provides a simple API for Seurat object, which is a function called RunHarmony, so it is very easy to use. It takes the merged Seurat object (the one generated at Step 1) as the input and one needs to tell the function which metadata feature to use as the batch identity. It returns a Seurat object, with a more reduction called harmony added. It is like the corrected PCA so one should then explicitly tell Seurat to use the harmony reduction for following analysis including making UMAP embedding and identifying cell clusters.
-
+```r
 seurat <- merge(seurat_DS1, seurat_DS2) %>%
     FindVariableFeatures(nfeatures = 3000) %>%
     ScaleData() %>%
@@ -97,18 +100,19 @@ seurat <- merge(seurat_DS1, seurat_DS2) %>%
 library(harmony)
 seurat <- RunHarmony(seurat, group.by.vars = "orig.ident", dims.use = 1:20, max.iter.harmony = 50)
 seurat <- RunUMAP(seurat, reduction = "harmony", dims = 1:20)
-seurat <- FindNeighbors(seurat, reduction = "harmony", dims = 1:20) %>% FindClusters(resolution = 0.6)
+seurat <- FindNeighbors(seurat, reduction = "harmony", dims = 1:20) %>% FindClusters(resolution = 0.6) 
 
 # You may also want to save the object
-saveRDS(seurat, file="integrated_harmony.rds")
+saveRDS(seurat, file="integrated_harmony.rds") ```
+
 P.S. The dims.use parameter determines which dimensions (by default, of PCA) to be used for the fuzzy clustering and to be corrected. By default it uses all the calculated dimensions. The max.iter.harmony controls the maximum number of iterations to be done. By default it is 10 but since Harmony is pretty fast, it is completely fine to increase the limit so that convergence can be ensured.
 
 We can then visualize the integration results similar to before
-
+```r
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
 
 
 Not bad. Cells of the two samples are quite nicely mixed, and we can see some nice trajectories. Question marks may need to put at some of the mixed groups, particularly those of non-dorsal-telencephalic cells, whether or not they are indeed cells of the same cell type that should be mixed.
@@ -117,7 +121,7 @@ As you may have noticed, Harmony by default takes the PCA result as the input an
 
 Step 2-3. Data integration using LIGER
 Together with Harmony and Seurat, LIGAR, developed by Evan Macosko's lab, is another data integration tool that was highlighted by the benchmark paper. It adapts integrative non-negative matrix factorization to identifying shared and dataset-specific factors for joint analysis. The detailed mathematics of the method can be found in the paper. It is implemented as the liger package in R, and it provides a wrapper for Seurat object, which relies also on the additional package SeuratWrappers in R.
-
+```r
 library(liger)
 library(SeuratWrappers)
 
@@ -131,15 +135,16 @@ seurat <- FindNeighbors(seurat, reduction = "iNMF", dims = 1:ncol(Embeddings(seu
     FindClusters(resolution = 0.6)
 
 # You may also want to save the object
-saveRDS(seurat, file="integrated_liger.rds")
+saveRDS(seurat, file="integrated_liger.rds") ```
+
 P.S. To install LIGER, do devtools::install_github('MacoskoLab/liger'). If you have a Mac machine and there is any error happened, there are some suggestions on its page. To install SeuratWrappers, do devtools::install_github('satijalab/seurat-wrappers')
 
 Similar to above, we next visualize the integration results with the UMAP showing data sets, clusters and also some feature plots.
-
+```r
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
 
 
 The result doesn't seem to be very easy to understand.
@@ -150,7 +155,7 @@ Step 2-4. Data integration using MNN
 MNN, developed by John Marioni's lab in EMBL-EBI, is one of the first algorithms developed for scRNA-seq data integration or batch correction. It estimates a cell-specific correction vector based on the mutual nearest neighbors between cells from two different samples/batches to introduce correction to the dimension reduction (e.g. PCA) of the query cells. It also introduces an ordering mechanism so that it also supports integration of more than two samples/batches. Although not being the most highlighted methods in the benchmarking paper mentioned above, it is one of the best methods according to other benchmark effort (e.g. Luecken et al.). To get more details of the method, please refer to the paper. In R, the MNN algorithm is implemented in the batchelor package, and the wrapper function for a Seurat object is included in the SeuratWrappers package (RunFastMNN function).
 
 The RunFastMNN function uses a list of Seurat objects, each of which is for one sample/batch, as the input. One can use the SplitObject function in the Seurat package to split a Seurat object given a metadata column.
-
+```r
 library(SeuratWrappers)
 
 seurat_samples <- SplitObject(seurat, "orig.ident")
@@ -161,15 +166,15 @@ seurat <- FindNeighbors(seurat, reduction = "mnn", dims = 1:20) %>%
     FindClusters(resolution = 0.6)
 
 # You may also want to save the object
-saveRDS(seurat, file="integrated_mnn.rds")
+saveRDS(seurat, file="integrated_mnn.rds") ```
 P.S. To install batchelor, do BiocManager::install("batchelor"). The batchelor package is required for the RunFastMNN function to work.
 
 We can next check the the integration method via its UMAP embedding.
-
+```r
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
 
 
 
@@ -180,9 +185,9 @@ Seurat, Harmony, LIGER and MNN are probably the most commonly used methods desig
 
 To do this analysis, one firstly needs a good reference. For cerebral organoid samples, the BrainSpan bulk RNA-seq data set of human brains from early fetal development to adult by Allen Brain Atlas is a very good one.
 
-ref_brainspan <- readRDS("data/ext/brainspan_fetal.rds")
+```ref_brainspan <- readRDS("data/ext/brainspan_fetal.rds")```
 Next we need to calculate similarity, or normalized Pearson's correlation between every cell and samples in the reference. There is a wrapper function for this step in the simspec package. The resulted representation is stored as one dimension reduction in the Seurat object (called rss by default). One can then use this dimension reduction for analysis including tSNE/UMAP and clustering.
-
+```r
 library(simspec)
 seurat <- merge(seurat_DS1, seurat_DS2)
 seurat <- ref_sim_spectrum(seurat, ref)
@@ -193,7 +198,7 @@ seurat <- FindNeighbors(seurat, reduction = "rss", dims = 1:ncol(Embeddings(seur
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
 P.S. If you don't have simspec package, install it via devtools::install_github("quadbiolab/simspec") 
 
 
@@ -203,7 +208,7 @@ Even if you like this result very much, there is a very obvious limitation of RC
 
 Step 2-6. Data integration using CSS
 At the end we would try the last data integration method in this tutorial, which is the extended version of RCA/RSS, which is cluster similarity spectrum (CSS) developed by our group. Instead of using external reference data set to represent cells in the data by similarities, it firstly does cell clustering to scRNA-seq data of each sample to be integrated, and uses the average expression profiles of the resulted clusters as the reference to calculate these similarities. More detailed description of the method can be seen in this paper.
-
+```r
 library(simspec)
 seurat <- merge(seurat_DS1, seurat_DS2) %>%
     FindVariableFeatures(nfeatures = 3000) %>%
@@ -217,7 +222,7 @@ seurat <- FindNeighbors(seurat, reduction = "css", dims = 1:ncol(Embeddings(seur
 plot1 <- UMAPPlot(seurat, group.by="orig.ident")
 plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
-((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
+((plot1 / plot2) | plot3) + plot_layout(width = c(1,2)) ```
 
 
 The result doesn't seem to be worse than the others, but the trajectories look a bit odds.
