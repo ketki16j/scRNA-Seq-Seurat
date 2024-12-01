@@ -1,20 +1,35 @@
 This directory contains the part 1 of the analysis: using Seurat package in R to do single cell RNA- Seq analysis
 
+
 Table of Content
+
 Introduction
+
 Preparation
+
 Import Seurat package
+
 Step 1. Create a Seurat object
+
 Step 2. Quality control
+
 Step 3. Normalization
+
 Step 4. Feature selection for following heterogeneity analysis
+
 Step 5. Data scaling
 (Optional and advanced) Alternative step 3-5: to use SCTransform
+
 Step 6. Linear dimension reduction using principal component analysis (PCA)
+
 Step 7. Non-linear dimension reduction for visualization
+
 Step 8. Cluster the cells
+
 Step 9. Annotate cell clusters
+
 Step 10. Pseudotemporal cell ordering
+
 Step 11. Save the result
 
 
