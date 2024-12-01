@@ -8,11 +8,9 @@ In this part of the tutorial, several scRNA-seq integration methods would be int
 Step 0. Load data
 Let's start with importing Seurat and load the saved Seurat object.
 
-``library(Seurat)
-
-library(dplyr)
-
-library(patchwork)
+``library(Seurat)```
+``library(dplyr)``
+``library(patchwork)```
 
 seurat_DS1 <- readRDS("DS1/seurat_obj_all.rds")
 
