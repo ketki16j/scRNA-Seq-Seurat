@@ -1,4 +1,4 @@
-`This directory contains the part 1 of the analysis: using Seurat package in R to do single cell RNA- Seq analysis
+This directory contains the part 1 of the analysis: using Seurat package in R to do single cell RNA- Seq analysis
 
 
 **`Table of Content`**
@@ -51,7 +51,7 @@ Step 0. Import Seurat package
 First of all, please make sure that Seurat is installed in your R.
 
 ``library(Seurat)``
-`
+
 
 This imports your installed Seurat package into your current R session. No error should be seen but some verbose information is likely. If it warns you that the package is unavailable, please install Seurat first
 
