@@ -28,7 +28,8 @@ plot1 <- DimPlot(seurat, group.by="orig.ident")
 plot2 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
 plot1 + plot2 + plot_layout(widths = c(1.5, 2))
 ```
-![image](https://github.com/user-attachments/assets/0e76ba81-63fb-4d54-8361-646ac53e6503)
+![umap_merged_datasets](https://github.com/user-attachments/assets/2cfb8dab-91dc-465b-8791-5f455e8faeea)
+
 
 
 Obviously, the two data sets separate from each other on the embedding. However, the marker expression patterns suggest that the two data sets indeed share quite many cell types. Ideally, cells of the same cell type in the two data sets should be mixed with each other. However, because of the batch effect, this is not happening. So we need to do data integration. What we hope is that after the integration, cells of the same cell type in the two data sets intermix, while cells of different cell types/states still separate.
