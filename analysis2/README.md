@@ -1,19 +1,23 @@
+**`Introduction: jointly analyze multiple scRNA-seq data sets`**
+
 Although some experimental strategy, e.g. cell hashing, as well as computational demultiplexing methods such as demuxlet and scSplit to some extend allow pooling multiple samples together for the scRNA-seq library preparation and sequencing, it is unavoidable that certain steps, e.g. tissue dissociation, would have to be done separately for diffent samples. Therefore, just like when dealing with bulk RNA-seq data, batch effect is usually a critical confounder of the result that one has to resolve.
 
-In this part of the tutorial, several scRNA-seq integration methods would be introduced. We will use DS1 which has been described in the first part of the tutorial, together with DS2 which you should have analyzed following this vignette. Please be aware that so far there is no 'best' integration method for all scenarios. It is therefore important to try different methods and compare, to at the end choose the one that works the best for every specific case.
+In this part of the tutorial, several scRNA-seq integration methods would be introduced. We will use DS1 which has been described in the first part of the tutorial, together with DS2 which you should have analyzed following this vignette. 
+``The datasets are available in scRNA-Seq-Seurat-/datasets/``
 
 Step 0. Load data
 Let's start with importing Seurat and load the saved Seurat object.
 
-library(Seurat)
+``library(Seurat)
 library(dplyr)
 library(patchwork)
 seurat_DS1 <- readRDS("DS1/seurat_obj_all.rds")
-seurat_DS2 <- readRDS("DS2/seurat_obj_all.rds")
+seurat_DS2 <- readRDS("DS2/seurat_obj_all.rds")``
+
 Step 1. Merge the two data sets
 First of all, there is some chances that batch effect is small so that no integration is necessary. Therefore, we should firstly take a look at the two data sets by simply merging them together.
 
-seurat <- merge(seurat_DS1, seurat_DS2) %>%
+``seurat <- merge(seurat_DS1, seurat_DS2) %>%
     FindVariableFeatures(nfeatures = 3000) %>%
     ScaleData() %>%
     RunPCA(npcs = 50) %>%
@@ -21,7 +25,7 @@ seurat <- merge(seurat_DS1, seurat_DS2) %>%
 plot1 <- DimPlot(seurat, group.by="orig.ident")
 plot2 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
 plot1 + plot2 + plot_layout(widths = c(1.5, 2))
-
+``
 
 Obviously, the two data sets separate from each other on the embedding. However, the marker expression patterns suggest that the two data sets indeed share quite many cell types. Ideally, cells of the same cell type in the two data sets should be mixed with each other. However, because of the batch effect, this is not happening. So we need to do data integration. What we hope is that after the integration, cells of the same cell type in the two data sets intermix, while cells of different cell types/states still separate.
 
