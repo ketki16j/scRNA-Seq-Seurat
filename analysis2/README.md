@@ -142,6 +142,7 @@ plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 
 ((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
 ```
 
+![image](https://github.com/user-attachments/assets/37c10023-b55d-4a51-a31c-7b93dbe66d38)
 
 
 Not bad. Cells of the two samples are quite nicely mixed, and we can see some nice trajectories. Question marks may need to put at some of the mixed groups, particularly those of non-dorsal-telencephalic cells, whether or not they are indeed cells of the same cell type that should be mixed.
@@ -178,6 +179,7 @@ plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 
 ((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
 ```
 
+![image](https://github.com/user-attachments/assets/a705df0e-e5cf-4dac-be7c-87621544f07e)
 
 
 The result doesn't seem to be very easy to understand.
@@ -212,6 +214,7 @@ plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 
 ((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
 ```
 
+![image](https://github.com/user-attachments/assets/7d088427-ca72-4617-b690-bcdb8d006616)
 
 
 The integration looks pretty promising. In most of the time MNN performs pretty well with default parameters. Still, one can easily introduce some tuning by e.g. changing the number of features or providing a fully customized feature set for the integration. This can be done by setting up the features parameter in the RunFastMNN wrapper function. There are also more parameters that one can pass to the original function (fastMNN in the batchelor package, e.g. number of PCs to calculate).
@@ -236,6 +239,7 @@ plot2 <- UMAPPlot(seurat, label = T)
 plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 0.1)
 ((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
 ```
+![image](https://github.com/user-attachments/assets/ef2501bc-2312-40c4-944f-6d8aa37ee06c)
 
 P.S. If you don't have simspec package, install it via devtools::install_github("quadbiolab/simspec")
 
@@ -264,6 +268,7 @@ plot3 <- FeaturePlot(seurat, c("FOXG1","EMX1","DLX2","LHX9"), ncol=2, pt.size = 
 ((plot1 / plot2) | plot3) + plot_layout(width = c(1,2))
 ```
 
+![image](https://github.com/user-attachments/assets/95157618-57fd-431b-b94a-f177e25ac907)
 
 
 The result doesn't seem to be worse than the others, but the trajectories look a bit odds.
